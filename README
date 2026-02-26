@@ -1,143 +1,201 @@
-Recipe Data Collection and API Development
+RECIPE DATA COLLECTION AND API DEVELOPMENT
 
-Project Objective
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-This project reads recipe data from a JSON file, stores it in a MySQL database, and provides REST APIs to manage and query the recipes. The implementation demonstrates JSON parsing, database integration, validation, and REST API development using a layered architecture.
+PROJECT OBJECTIVE
 
-Architecture
+This project was developed to parse recipe data from a JSON file, store it in a MySQL database, and build REST APIs to manage and query the stored recipes.
 
-The project follows a layered structure:
+The key objectives of this project were:
 
-Controller handles HTTP requests and responses.
-Service contains business logic such as validation and total_time calculation.
-Repository manages database operations.
-Database stores recipe data in MySQL.
+➤ Parse structured JSON data
+➤ Store data into a relational database
+➤ Implement RESTful APIs
+➤ Apply validation and business logic
+➤ Prevent duplicate entries
+➤ Maintain clean layered architecture
 
-Project Structure
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-recipe-api
-controller
-service
-repository
-model
-util
-resources
+PROJECT ARCHITECTURE
 
-JSON Parsing Process
+The application follows a layered architecture:
 
-The JSON file named US_recipes_null.json is placed inside the resources folder.
+Controller ➜ Service ➜ Repository ➜ Database
 
-A class implementing CommandLineRunner is used to automatically load data when the application starts.
+➤ Controller
+Handles incoming HTTP requests and returns JSON responses.
 
-Process followed:
+➤ Service
+Contains business logic such as validation and calculation of total_time.
 
-1. Read the JSON file using InputStream.
-2. Convert JSON into Java objects using ObjectMapper.
-3. Extract recipe objects from the parsed data.
-4. Calculate total_time as prep_time plus cook_time.
-5. Check if a recipe with the same title already exists.
-6. Save the recipe into the database only if it does not already exist.
+➤ Repository
+Manages database operations and data persistence.
 
-This ensures automatic data loading and prevents duplicate entries.
+➤ Database
+MySQL database used to store recipe records.
 
-Database Setup
+This structure ensures separation of concerns, maintainability, and scalability.
 
-First create the database:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-CREATE DATABASE recipe_db;
+JSON PARSING AND DATA LOADING
 
-Then create the recipes table:
+The recipe dataset (US_recipes_null.json) is placed inside the resources folder.
 
-CREATE TABLE recipes (
-id INT AUTO_INCREMENT PRIMARY KEY,
-title VARCHAR(255) NOT NULL,
-cuisine VARCHAR(255) NOT NULL,
-rating FLOAT,
-prep_time INT NOT NULL,
-cook_time INT NOT NULL,
-total_time INT,
-description TEXT,
-nutrients JSON,
-serves VARCHAR(100)
-);
+To automatically load data during application startup, a class implementing CommandLineRunner was created.
 
-The total_time column is calculated in the service layer before saving the record.
+Processing Flow:
 
-REST API Endpoints
+✔ Application starts
+✔ JSON file is read using InputStream
+✔ ObjectMapper converts JSON into Java objects
+✔ Recipe objects are extracted
+✔ total_time is calculated using:
 
-Base URL:
-[http://localhost:8080/recipes](http://localhost:8080/recipes)
+total_time = prep_time + cook_time
 
-POST /recipes
+✔ Duplicate titles are checked
+✔ Valid records are inserted into the database
 
-Purpose: Add a new recipe.
+This ensures:
 
-Required fields:
-title
-cuisine
-prep_time
-cook_time
+✓ Automatic data initialization
+✓ Data consistency
+✓ No duplicate records
 
-The application automatically calculates total_time before saving.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-If required fields are missing, it returns 400 Bad Request.
-If the recipe title already exists, it returns 409 Conflict.
-On success, it returns 201 Created with the saved recipe.
+DATABASE DESIGN
 
-GET /recipes
+Database Name: recipe_db
 
-Purpose: Retrieve all recipes stored in the database.
+Table Name: recipes
 
-GET /recipes/top
+Table Fields:
 
-Purpose: Retrieve top-rated recipes.
+◆ id — Primary Key (Auto Increment)
+◆ title — Recipe name
+◆ cuisine — Cuisine type
+◆ rating — User rating
+◆ prep_time — Preparation time
+◆ cook_time — Cooking time
+◆ total_time — Calculated field
+◆ description — Recipe description
+◆ nutrients — Stored in JSON format
+◆ serves — Number of servings
 
-Optional query parameter:
-limit (default value is 5)
+Note: total_time is calculated in the application to maintain data accuracy instead of relying on JSON input.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+REST API IMPLEMENTATION
+
+Base URL
+http://localhost:8080/recipes
+
+────────────────────────────────────
+
+A. POST /recipes
+
+Purpose:
+Add a new recipe to the database.
+
+Validation Rules:
+
+● title must be provided
+● cuisine must be provided
+● prep_time must be provided
+● cook_time must be provided
+
+Business Logic:
+
+✔ Automatically calculates total_time
+✔ Checks for duplicate recipe titles
+✔ Returns appropriate HTTP status codes
+
+Response Codes:
+
+✔ 201 CREATED — Recipe saved successfully
+✔ 400 BAD REQUEST — Missing required fields
+✔ 409 CONFLICT — Duplicate recipe title
+
+────────────────────────────────────
+
+B. GET /recipes
+
+Purpose:
+Retrieve all recipes stored in the database.
+
+Returns:
+List of all recipes in JSON format.
+
+────────────────────────────────────
+
+C. GET /recipes/top
+
+Purpose:
+Retrieve top-rated recipes.
+
+Query Parameter:
+
+● limit (optional, default = 5)
 
 Example:
-[http://localhost:8080/recipes/top?limit=2](http://localhost:8080/recipes/top?limit=2)
+http://localhost:8080/recipes/top?limit=2
 
-This endpoint sorts recipes by rating in descending order and returns only the specified number of results.
+Logic:
 
-Application Flow
+✔ Sort recipes by rating in descending order
+✔ Return only the specified number of records
 
-When the application starts:
+Response Format:
 
-1. The server starts.
-2. The database connection is established.
-3. The JSON file is parsed.
-4. total_time is calculated.
-5. Duplicate recipes are skipped.
-6. Data is inserted into the database.
+{
+"data": [ top rated recipes ]
+}
 
-When an API request is sent:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-1. The controller receives the request.
-2. The service applies business logic.
-3. The repository interacts with the database.
-4. A JSON response is returned to the client.
+APPLICATION FLOW
 
-Technologies Used
+Startup Flow:
 
-Java 17
-Spring Boot
-Spring Data JPA
-MySQL
-Jackson
-Maven
+1 ➜ Application starts
+2 ➜ Database connection established
+3 ➜ JSON file parsed
+4 ➜ total_time calculated
+5 ➜ Duplicate recipes skipped
+6 ➜ Data inserted into database
+7 ➜ Server runs at http://localhost:8080
 
-How to Run the Project
+API Request Flow:
 
-1. Create the database recipe_db in MySQL.
-2. Update database credentials in application.properties.
-3. Run the project using:
+Client ➜ Controller ➜ Service ➜ Repository ➜ Database ➜ JSON Response
 
-mvn spring-boot:run
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-4. Access APIs using:
-   [http://localhost:8080/recipes](http://localhost:8080/recipes)
+TECHNOLOGIES USED
 
-Conclusion
+◆ Java 17
+◆ Spring Boot
+◆ Spring Data JPA
+◆ MySQL
+◆ Jackson
+◆ Maven
 
-This project demonstrates complete backend development including JSON parsing, database design, validation, duplicate prevention, business logic implementation, and REST API development using a clean layered architecture.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+CONCLUSION
+
+This project demonstrates complete backend development including:
+
+✔ JSON parsing
+✔ Database schema design
+✔ Business logic implementation
+✔ Validation handling
+✔ Duplicate prevention
+✔ REST API development
+✔ Clean layered architecture
+
+The system ensures structured data processing, reliable database storage, and efficient API-based retrieval using a localhost environment.
